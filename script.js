@@ -1,5 +1,7 @@
 d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json", function(json){
 
+  var pairs = json.data;
+
   var data = json.data.map(function(curr, i){
     return curr[1];
 
@@ -10,8 +12,8 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
 
   })
 
-  var firstYear = quarters[0];
-  var lastYear = quarters[quarters.length-1]
+  var minDate = new Date(quarters[0]);
+  var maxDate = new Date(quarters[quarters.length-1]);
   // // quarters look like this:
   // // 1947-01-01
   var parseDate = d3.time.format("%Y-%m-%d");
@@ -27,11 +29,13 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
           .domain([0, d3.max(data)])
           .range([0, height]);
 
-  var xScale = d3.scale.ordinal()
-          .domain(d3.range(0, quarters.length))
-          .rangeBands([0, width], 0.2)
+  // var xScale = d3.scale.ordinal()
+  //         .domain(d3.range(0, quarters.length))
+  //         .rangeBands([0, width], 0.2)
 
-
+  var xScale = d3.time.scale()
+      .domain([minDate, maxDate])
+      .rangeRound([0, width-margin.right])
 
   var myChart = d3.select("#chart").append('svg')
       .style('background', '#E7E0CB')
@@ -42,9 +46,13 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
         .selectAll('rect').data(data)
         .enter().append('rect')
             .style('fill', '#619CFF')
-            .attr('width', xScale.rangeBand())
-            .attr('x', function(d,i) {
-                return xScale(i);
+            .attr('width', width/quarters.length)
+            // .attr('x', function(d,i) {
+            //     return xScale(i);
+            // })
+            .attr('x', function(v, i){
+              console.log(xScale(new Date(v[0])))
+              return xScale(new Date(v[0]))
             })
             .attr('height', 0)
             .attr('y', height)
