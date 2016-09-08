@@ -1,20 +1,16 @@
 d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json", function(json){
 
-  var data = json.data.map(function(curr, i){
-    return curr[1];
+  var parseDate = d3.time.format("%Y-%m-%d").parse;
 
-  })
+  var pairs = json.data
 
   var quarters = json.data.map(function(curr, i){
-    return Number(curr[0].split("-")[0])
-
+    return parseDate(curr[0])
   })
 
-  var firstYear = quarters[0];
-  var lastYear = quarters[quarters.length-1]
-  // // quarters look like this:
-  // // 1947-01-01
-  var parseDate = d3.time.format("%Y-%m-%d");
+  var data = json.data.map(function(curr, i){
+    return curr[1];
+  })
 
   var margin = { top: 30, right: 30, bottom: 40, left:70 }
 
@@ -27,11 +23,9 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
           .domain([0, d3.max(data)])
           .range([0, height]);
 
-  var xScale = d3.scale.ordinal()
-          .domain(d3.range(0, quarters.length))
-          .rangeBands([0, width], 0.2)
-
-
+  var xScale = d3.time.scale()
+          .domain([d3.min(quarters), d3.max(quarters)])
+          .rangeRound([0, width])
 
   var myChart = d3.select("#chart").append('svg')
       .style('background', '#E7E0CB')
@@ -39,12 +33,13 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
       .attr('height', height + margin.top + margin.bottom)
       .append('g')
         .attr('transform', 'translate('+ margin.left +', '+ margin.top +')')
-        .selectAll('rect').data(data)
+        .selectAll('rect').data(pairs)
         .enter().append('rect')
             .style('fill', '#619CFF')
-            .attr('width', xScale.rangeBand())
+            .attr('width', 2)
             .attr('x', function(d,i) {
-                return xScale(i);
+                console.log(d[0])
+                return xScale(parseDate(d[0]));
             })
             .attr('height', 0)
             .attr('y', height)
@@ -52,7 +47,7 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
 
             tooltip.style('opacity', .9)
 
-            tooltip.html(d)
+            tooltip.html(d[1])
                 .style('left', (d3.event.pageX - 35) + 'px')
                 .style('top',  (d3.event.pageY - 30) + 'px')
 
@@ -74,10 +69,10 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
 
   myChart.transition()
     .attr('height', function(d) {
-        return yScale(d);
+        return yScale(d[1]);
     })
     .attr('y', function(d) {
-        return height - yScale(d);
+        return height - yScale(d[1]);
     })
     .delay(function(d, i) {
         return i * (1000/data.length);
@@ -103,11 +98,8 @@ d3.json("https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
           .style({ stroke: "#000"})
 
   var hAxis = d3.svg.axis()
-      .scale(xScale)
-      .orient('bottom')
-      .tickValues(xScale.domain().filter(function(d, i) {
-          return !(i % (data.length/5));
-      }))
+      .orient("bottom")
+      .scale(xScale);
 
   var hGuide = d3.select('svg').append('g')
       hAxis(hGuide)
